@@ -39,15 +39,11 @@ private:
     void Sprint();
     void StopSprinting();
 
+private:
     // Movement properties
     UPROPERTY(EditAnywhere, Category = "Movement")
     float WalkSpeed = 600.0f;
-    void UpdateCharacterRotation(float DeltaTime);
 
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SprintSpeedMultiplier = 1.5f;
-
-    float VerticalInput;
-    float HorizontalInput;
-    FRotator TargetRotation;
 };

@@ -51,22 +51,12 @@ void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AFieldPlayer::MoveForward(float AxisValue)
 {
-    // Use controller rotation for proper camera-relative movement
-    const FRotator Rotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, Rotation.Yaw, 0);
-    const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-    AddMovementInput(Direction, AxisValue);
+    AddMovementInput(GetActorForwardVector(), AxisValue);
 }
 
 void AFieldPlayer::MoveRight(float AxisValue)
 {
-    // Use controller rotation for proper camera-relative movement
-    const FRotator Rotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, Rotation.Yaw, 0);
-    const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-    AddMovementInput(Direction, AxisValue);
+    AddMovementInput(GetActorRightVector(), AxisValue);
 }
 
 void AFieldPlayer::Sprint()
