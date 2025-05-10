@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/DecalComponent.h" // Moved before .generated.h
 #include "FieldPlayerAnim.h"
 #include "FieldPlayer.generated.h"
 
@@ -15,6 +16,12 @@ class IJAG_API AFieldPlayer : public ACharacter
 public:
     AFieldPlayer();
 
+    UFUNCTION(BlueprintCallable)
+    void BecomePossessed(APlayerController* NewController);
+
+    UFUNCTION(BlueprintCallable)
+    void LosePossession();
+
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -25,6 +32,12 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
     UFieldPlayerAnim* AnimInstance;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Possession")
+    UDecalComponent* SelectionDecal;
+
+    UFUNCTION(BlueprintCallable)
+    void SetPossessionIndicator(bool bIsPossessed);
 
 private:
     // Add timer handler declaration

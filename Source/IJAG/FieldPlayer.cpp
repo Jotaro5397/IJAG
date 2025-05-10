@@ -2,6 +2,7 @@
 
 
 #include "FieldPlayer.h"
+#include "Components/DecalComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 
@@ -14,6 +15,19 @@ AFieldPlayer::AFieldPlayer()
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // Rotation speed
     GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
+    SelectionDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionDecal"));
+    SelectionDecal->SetupAttachment(RootComponent);
+    SelectionDecal->SetDecalMaterial(LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Path/To/DefaultDecalMaterial")));
+    SelectionDecal->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
+    SelectionDecal->DecalSize = FVector(64.f, 128.f, 128.f);
+    SelectionDecal->SetVisibility(false);
+
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultMaterial(TEXT("/Game/Path/To/DefaultDecalMaterial"));
+    if (DefaultMaterial.Succeeded())
+    {
+        SelectionDecal->SetDecalMaterial(DefaultMaterial.Object);
+    }
 }
 void AFieldPlayer::BeginPlay()
 {
@@ -37,6 +51,35 @@ void AFieldPlayer::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+}
+
+void AFieldPlayer::SetPossessionIndicator(bool bIsPossessed)
+{
+    SelectionDecal->SetVisibility(bIsPossessed);
+    
+    // Create dynamic material instance with proper UE5.5 syntax
+    if (UMaterialInterface* BaseMaterial = SelectionDecal->GetDecalMaterial())
+    {
+        UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+        SelectionDecal->SetDecalMaterial(DynMaterial);
+        
+        if (DynMaterial)
+        {
+            FLinearColor Color = bIsPossessed ? FLinearColor::Green : FLinearColor::Red;
+            DynMaterial->SetVectorParameterValue("Color", Color);
+        }
+    }
+}
+
+void AFieldPlayer::BecomePossessed(APlayerController* NewController)
+{
+    SetPossessionIndicator(true);
+    PossessedBy(NewController);
+}
+
+void AFieldPlayer::LosePossession()
+{
+    SetPossessionIndicator(false);
 }
 
 void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
