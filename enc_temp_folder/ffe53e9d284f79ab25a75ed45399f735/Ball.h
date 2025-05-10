@@ -15,13 +15,6 @@ public:
 	// Sets default values for this character's properties
 	ABall();
 
-public:
-	UFUNCTION(BlueprintCallable)
-	FVector GetBallLocation() const { return GetActorLocation(); }
-
-	UPROPERTY(EditAnywhere, Category = "Ball Properties")
-	float MoveSpeed = 1000.0f;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

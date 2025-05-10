@@ -3,20 +3,6 @@
 #include "MyPlayerController.h"
 #include "FieldPlayer.h"
 #include "Kismet/GameplayStatics.h"
-#include "BroadCamera.h"  
-
-void AMyPlayerController::BeginPlay()
-{
-    Super::BeginPlay();
-
-    // Optional: Get reference to camera (ensure it exists in the level)
-    ABroadCamera* BroadCameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-
-    if (BroadCameraActor)
-    {
-        SetViewTarget(BroadCameraActor);
-    }
-}
 
 void AMyPlayerController::SetupInputComponent()
 {

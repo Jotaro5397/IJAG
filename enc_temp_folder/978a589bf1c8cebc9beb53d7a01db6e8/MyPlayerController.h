@@ -14,9 +14,6 @@ class IJAG_API AMyPlayerController : public APlayerController
     GENERATED_BODY()
 
 public:
-
-    virtual void BeginPlay() override;
-
     virtual void SetupInputComponent() override;
     UFUNCTION(BlueprintCallable)
     void SwitchPlayer();
