@@ -18,9 +18,8 @@ AFieldPlayer::AFieldPlayer()
 
     SelectionDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionDecal"));
     SelectionDecal->SetupAttachment(RootComponent);
-    SelectionDecal->SetDecalMaterial(LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Path/To/DefaultDecalMaterial")));
-    SelectionDecal->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
-    SelectionDecal->DecalSize = FVector(64.f, 128.f, 128.f);
+    SelectionDecal->SetRelativeRotation(FRotator(90.f, 0.f, 0.f)); // Face upwards
+    SelectionDecal->DecalSize = FVector(100.f, 200.f, 200.f);
     SelectionDecal->SetVisibility(false);
 
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultMaterial(TEXT("/Game/Path/To/DefaultDecalMaterial"));
@@ -33,14 +32,11 @@ void AFieldPlayer::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Auto-possess if no controller
-    if (!GetController())
+
+    if (PossessedDecalMaterial)
     {
-        APlayerController* PC = GetWorld()->GetFirstPlayerController();
-        if (PC)
-        {
-            PC->Possess(this); // Take control of this actor
-        }
+        UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(PossessedDecalMaterial, this);
+        SelectionDecal->SetDecalMaterial(DynMaterial);
     }
 
     // Initialize animation instance
@@ -53,33 +49,27 @@ void AFieldPlayer::Tick(float DeltaTime)
 
 }
 
-void AFieldPlayer::SetPossessionIndicator(bool bIsPossessed)
+// CORRECTED FUNCTION NAME
+void AFieldPlayer::UpdateDecalVisibility(bool bIsPossessed)
 {
-    SelectionDecal->SetVisibility(bIsPossessed);
-    
-    // Create dynamic material instance with proper UE5.5 syntax
-    if (UMaterialInterface* BaseMaterial = SelectionDecal->GetDecalMaterial())
+    if (SelectionDecal)
     {
-        UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
-        SelectionDecal->SetDecalMaterial(DynMaterial);
-        
-        if (DynMaterial)
-        {
-            FLinearColor Color = bIsPossessed ? FLinearColor::Green : FLinearColor::Red;
-            DynMaterial->SetVectorParameterValue("Color", Color);
-        }
+        SelectionDecal->SetVisibility(bIsPossessed);
+        // ... (material logic)
     }
 }
 
-void AFieldPlayer::BecomePossessed(APlayerController* NewController)
+// UPDATE POSSESSION OVERRIDES
+void AFieldPlayer::PossessedBy(AController* NewController)
 {
-    SetPossessionIndicator(true);
-    PossessedBy(NewController);
+    Super::PossessedBy(NewController);
+    UpdateDecalVisibility(true); // Use corrected name
 }
 
-void AFieldPlayer::LosePossession()
+void AFieldPlayer::UnPossessed()
 {
-    SetPossessionIndicator(false);
+    Super::UnPossessed();
+    UpdateDecalVisibility(false); // Use corrected name
 }
 
 void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

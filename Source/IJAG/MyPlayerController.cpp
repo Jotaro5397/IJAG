@@ -1,20 +1,26 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyPlayerController.h"
-#include "FieldPlayer.h"
 #include "Kismet/GameplayStatics.h"
-#include "BroadCamera.h"  
+#include "BroadCamera.h"
+#include "FieldPlayer.h"
 
 void AMyPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Optional: Get reference to camera (ensure it exists in the level)
-    ABroadCamera* BroadCameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-
-    if (BroadCameraActor)
+    // 1. Find and possess the FieldPlayer pawn
+    APawn* PlayerPawn = Cast<APawn>(UGameplayStatics::GetActorOfClass(GetWorld(), AFieldPlayer::StaticClass()));
+    if (PlayerPawn)
     {
-        SetViewTarget(BroadCameraActor);
+        Possess(PlayerPawn); // Take control of the pawn
+    }
+
+    // 2. Set camera view
+    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    if (CameraActor)
+    {
+        SetViewTargetWithBlend(CameraActor, 0.0f); // Instant switch
     }
 }
 
@@ -29,22 +35,17 @@ void AMyPlayerController::SwitchPlayer()
     if (AllPlayers.Num() == 0) CacheAllPlayers();
     if (AllPlayers.Num() < 2) return;
 
-    // Unpossess current
+    // Unpossess current pawn (no need for LosePossession)
     if (GetPawn())
     {
-        if (AFieldPlayer* CurrentPlayer = Cast<AFieldPlayer>(GetPawn()))
-        {
-            CurrentPlayer->LosePossession();
-        }
-        UnPossess();
+        UnPossess(); // Native unpossession
     }
 
     // Cycle through players
     CurrentPlayerIndex = (CurrentPlayerIndex + 1) % AllPlayers.Num();
     if (AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(AllPlayers[CurrentPlayerIndex]))
     {
-        Possess(NewPlayer);
-        NewPlayer->BecomePossessed(this);
+        Possess(NewPlayer); // Native possession
         SetViewTargetWithBlend(NewPlayer, 0.5f);
     }
 }

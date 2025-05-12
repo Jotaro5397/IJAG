@@ -16,15 +16,14 @@ class IJAG_API AFieldPlayer : public ACharacter
 public:
     AFieldPlayer();
 
-    UFUNCTION(BlueprintCallable)
-    void BecomePossessed(APlayerController* NewController);
-
-    UFUNCTION(BlueprintCallable)
-    void LosePossession();
 
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+
+    virtual void PossessedBy(AController* NewController) override;
+    virtual void UnPossessed() override;
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UFUNCTION(BlueprintCallable)
@@ -33,11 +32,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
     UFieldPlayerAnim* AnimInstance;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Possession")
-    UDecalComponent* SelectionDecal;
-
-    UFUNCTION(BlueprintCallable)
-    void SetPossessionIndicator(bool bIsPossessed);
 
 private:
     // Add timer handler declaration
@@ -59,4 +53,13 @@ private:
 
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SprintSpeedMultiplier = 1.5f;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Possession", meta = (AllowPrivateAccess = "true"))
+    UDecalComponent* SelectionDecal;
+
+    // Material reference
+    UPROPERTY(EditDefaultsOnly, Category = "Possession")
+    UMaterialInterface* PossessedDecalMaterial;
+
+    void UpdateDecalVisibility(bool bIsPossessed);
 };

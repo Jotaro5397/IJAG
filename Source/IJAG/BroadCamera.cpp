@@ -9,11 +9,12 @@ ABroadCamera::ABroadCamera()
     PrimaryActorTick.bCanEverTick = true;
 
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-    SpringArmComponent->TargetArmLength = 500.0f;
+    SpringArmComponent->TargetArmLength = 1000.0f;
     RootComponent = SpringArmComponent;
 
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent);
+    CameraComponent->SetActive(true);
 }
 
 void ABroadCamera::BeginPlay()
