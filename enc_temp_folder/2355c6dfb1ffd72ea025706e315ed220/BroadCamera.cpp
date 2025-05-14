@@ -25,21 +25,23 @@ void ABroadCamera::BeginPlay()
     // TargetBall = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
 }
 
-// BroadCamera.cpp
 void ABroadCamera::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     if (TargetBall)
     {
-        // Follow the ball with offset
-        FVector TargetLocation = TargetBall->GetActorLocation() + CameraOffset;
+        FVector BallLocation = TargetBall->GetActorLocation();
+        FVector TargetLocation = BallLocation + CameraOffset;
+        FVector CurrentLocation = GetActorLocation();
+
         FVector NewLocation = FMath::VInterpTo(
-            GetActorLocation(),
+            CurrentLocation,
             TargetLocation,
             DeltaTime,
             InterpSpeed
         );
+
         SetActorLocation(NewLocation);
     }
 }

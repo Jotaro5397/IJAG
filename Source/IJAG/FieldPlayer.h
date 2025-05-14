@@ -17,12 +17,20 @@ public:
     AFieldPlayer();
 
 
+public:
+    UFUNCTION(BlueprintCallable)
+    bool HasBall() const { return bHasBall; }
+
+    UFUNCTION(BlueprintCallable)
+    void SetHasBall(bool bNewState) { bHasBall = bNewState; }
+
+    
+
+
+
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
-
-    virtual void PossessedBy(AController* NewController) override;
-    virtual void UnPossessed() override;
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -47,19 +55,24 @@ private:
     void StopSprinting();
 
 private:
-    // Movement properties
+    // Decal Component
+    UPROPERTY(VisibleAnywhere, Category = "Possession")
+    UDecalComponent* SelectionDecal;
+
+    // Material Reference
+    UPROPERTY(EditDefaultsOnly, Category = "Possession")
+    UMaterialInterface* PossessedDecalMaterial;
+
+    // Ball State
+    UPROPERTY(VisibleAnywhere, Category = "Ball")
+    bool bHasBall = false; // Declare ONCE
+
+    void UpdateDecalVisibility(bool bIsPossessed);
+
+    // Movement Properties
     UPROPERTY(EditAnywhere, Category = "Movement")
     float WalkSpeed = 600.0f;
 
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SprintSpeedMultiplier = 1.5f;
-    
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Possession", meta = (AllowPrivateAccess = "true"))
-    UDecalComponent* SelectionDecal;
-
-    // Material reference
-    UPROPERTY(EditDefaultsOnly, Category = "Possession")
-    UMaterialInterface* PossessedDecalMaterial;
-
-    void UpdateDecalVisibility(bool bIsPossessed);
 };

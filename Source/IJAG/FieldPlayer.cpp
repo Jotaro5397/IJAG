@@ -59,19 +59,6 @@ void AFieldPlayer::UpdateDecalVisibility(bool bIsPossessed)
     }
 }
 
-// UPDATE POSSESSION OVERRIDES
-void AFieldPlayer::PossessedBy(AController* NewController)
-{
-    Super::PossessedBy(NewController);
-    UpdateDecalVisibility(true); // Use corrected name
-}
-
-void AFieldPlayer::UnPossessed()
-{
-    Super::UnPossessed();
-    UpdateDecalVisibility(false); // Use corrected name
-}
-
 void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -84,11 +71,9 @@ void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AFieldPlayer::MoveForward(float AxisValue)
 {
-    // Use controller rotation for proper camera-relative movement
     const FRotator Rotation = Controller->GetControlRotation();
     const FRotator YawRotation(0, Rotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
     AddMovementInput(Direction, AxisValue);
 }
 

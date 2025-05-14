@@ -3,36 +3,29 @@
 #include "MyPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "FieldPlayer.h"
-#include "BroadCamera.h"
-#include "Ball.h"
 
-// MyPlayerController.cpp
 void AMyPlayerController::BeginPlay()
 {
     Super::BeginPlay();
-
-    // 1. Activate BroadCamera
-    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-    if (CameraActor)
-    {
-        SetViewTargetWithBlend(CameraActor, 0.0f); // Force camera view
-    }
-
-    // 2. Auto-assign ball to camera
-    ABall* Ball = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
-    if (Ball && CameraActor)
-    {
-        CameraActor->SetTargetBall(Ball);
-    }
-
-    // 3. Auto-possess first player
     CacheAllPlayers();
+
+    // Auto-possess first player
     if (AllPlayers.Num() > 0)
     {
         Possess(Cast<APawn>(AllPlayers[0]));
     }
 }
 
+void AMyPlayerController::SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime)
+{
+    if (!NewViewTarget) return;
+
+    // Ensure controller has valid pawn
+    if (GetPawn() && GetPawn() == NewViewTarget)
+    {
+        Super::SetViewTargetWithBlend(NewViewTarget, BlendTime);
+    }
+}
 
 void AMyPlayerController::SetupInputComponent()
 {
@@ -45,14 +38,25 @@ void AMyPlayerController::SwitchPlayer()
     if (AllPlayers.Num() == 0) CacheAllPlayers();
     if (AllPlayers.Num() < 2) return;
 
-    // Unpossess current pawn
-    if (GetPawn()) UnPossess();
+    // Unpossess current pawn safely
+    if (GetPawn())
+    {
+        UnPossess();
+    }
 
     // Cycle players
     CurrentPlayerIndex = (CurrentPlayerIndex + 1) % AllPlayers.Num();
     if (AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(AllPlayers[CurrentPlayerIndex]))
     {
-        Possess(NewPlayer); // Control the player WITHOUT changing the camera
+        // Critical fix: Possess before setting view target
+        Possess(NewPlayer);
+        SetViewTargetWithBlend(NewPlayer, 0.5f);
+
+        // Alternative: Use camera component from pawn
+        // if (NewPlayer->GetCameraComponent()) 
+        // {
+        //     SetViewTargetWithBlend(NewPlayer->GetCameraComponent()->GetOwner(), 0.5f);
+        // }
     }
 }
 
@@ -61,8 +65,8 @@ void AMyPlayerController::CacheAllPlayers()
     AllPlayers.Empty();
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFieldPlayer::StaticClass(), AllPlayers);
 
-    // Remove invalid or non-player actors
+    // Validate actors
     AllPlayers.RemoveAll([](AActor* Actor) {
-        return !IsValid(Actor) || !Actor->IsA<AFieldPlayer>();
+        return !IsValid(Actor) || Cast<AFieldPlayer>(Actor) == nullptr;
         });
 }
