@@ -6,54 +6,83 @@
 #include "BroadCamera.h"
 #include "Ball.h"
 
-// MyPlayerController.cpp
-void AMyPlayerController::BeginPlay()
+
+AMyPlayerController::AMyPlayerController() 
 {
-    Super::BeginPlay();
-
-    // 1. Activate BroadCamera
-    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-    if (CameraActor)
-    {
-        SetViewTargetWithBlend(CameraActor, 0.0f); // Force camera view
-    }
-
-    // 2. Auto-assign ball to camera
-    ABall* Ball = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
-    if (Ball && CameraActor)
-    {
-        CameraActor->SetTargetBall(Ball);
-    }
-
-    // 3. Auto-possess first player
-    CacheAllPlayers();
-    if (AllPlayers.Num() > 0)
-    {
-        Possess(Cast<APawn>(AllPlayers[0]));
-    }
+    bAutoManageActiveCameraTarget = false; // Default is true, but enforce it
 }
 
 
-void AMyPlayerController::SetupInputComponent()
+void AMyPlayerController::BeginPlay() {
+    Super::BeginPlay();
+
+    SetBroadCameraAsViewTarget();
+
+    // Get a reference to the existing character in the scene
+    AFieldPlayer* PlayerCharacter = Cast<AFieldPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), AFieldPlayer::StaticClass()));
+
+    if (PlayerCharacter)
+    {
+        // Possess the character
+        Possess(PlayerCharacter);
+    }
+
+    // Link ball to camera (optional, if needed)
+    ABall* Ball = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
+    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    if (Ball && CameraActor) {
+        CameraActor->SetTargetBall(Ball);
+    }
+
+    ABroadCamera* LevelCamera = Cast<ABroadCamera>(
+        UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass())
+    );
+
+    // Set it as the active view target
+    if (LevelCamera) {
+        SetViewTarget(LevelCamera);
+    }
+
+    // Auto-possess the first player
+    CacheAllPlayers();
+    if (AllPlayers.Num() > 0) {
+        PossessPlayerAndSetView();
+    }
+}
+
+void AMyPlayerController::SetBroadCameraAsViewTarget()
 {
-    Super::SetupInputComponent();
-    InputComponent->BindAction("SwitchPlayer", IE_Pressed, this, &AMyPlayerController::SwitchPlayer);
+    ABroadCamera* BroadCamera = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    if (BroadCamera)
+    {
+        SetViewTarget(BroadCamera); // Switch immediately without blending
+    }
 }
 
 void AMyPlayerController::SwitchPlayer()
 {
-    if (AllPlayers.Num() == 0) CacheAllPlayers();
-    if (AllPlayers.Num() < 2) return;
+    // Refresh the player list
+    CacheAllPlayers();
+
+    if (AllPlayers.Num() < 2)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Not enough players!"));
+        return;
+    }
 
     // Unpossess current pawn
-    if (GetPawn()) UnPossess();
+    if (APawn* CurrentPawn = GetPawn())
+    {
+        UnPossess();
+        CurrentPawn->DisableInput(this);
+    }
 
     // Cycle players
     CurrentPlayerIndex = (CurrentPlayerIndex + 1) % AllPlayers.Num();
-    if (AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(AllPlayers[CurrentPlayerIndex]))
-    {
-        Possess(NewPlayer); // Control the player WITHOUT changing the camera
-    }
+    UE_LOG(LogTemp, Log, TEXT("Switching to index: %d"), CurrentPlayerIndex);
+
+    // Possess the new player and update the camera
+    PossessPlayerAndSetView();
 }
 
 void AMyPlayerController::CacheAllPlayers()
@@ -61,8 +90,46 @@ void AMyPlayerController::CacheAllPlayers()
     AllPlayers.Empty();
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFieldPlayer::StaticClass(), AllPlayers);
 
-    // Remove invalid or non-player actors
+    // Debug: Print all found players
+    for (AActor* Actor : AllPlayers)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Found player: %s"), *Actor->GetName());
+    }
+
+    // Remove invalid actors
     AllPlayers.RemoveAll([](AActor* Actor) {
-        return !IsValid(Actor) || !Actor->IsA<AFieldPlayer>();
+        bool bIsValid = IsValid(Actor) && Actor->IsA<AFieldPlayer>();
+        if (!bIsValid) UE_LOG(LogTemp, Warning, TEXT("Removed invalid actor"));
+        return !bIsValid;
         });
+
+    UE_LOG(LogTemp, Log, TEXT("Total players: %d"), AllPlayers.Num());
+}
+
+
+
+void AMyPlayerController::PossessPlayerAndSetView() {
+    if (AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(AllPlayers[CurrentPlayerIndex])) {
+        Possess(NewPlayer);
+        NewPlayer->EnableInput(this);
+        // Ensure the pawn's camera is used
+        SetViewTarget(NewPlayer);
+        UE_LOG(LogTemp, Log, TEXT("Possessed and viewing: %s"), *NewPlayer->GetName());
+    }
+}
+
+void AMyPlayerController::OnPossess(APawn* InPawn) 
+{
+    Super::OnPossess(InPawn);
+    if (InPawn) {
+        SetViewTarget(InPawn, FViewTargetTransitionParams()); // Force camera switch
+    }
+}
+
+void AMyPlayerController::SetupInputComponent()
+{
+    Super::SetupInputComponent();
+
+    // Bind "SwitchPlayer" action to Shift key
+    InputComponent->BindAction("SwitchPlayer", IE_Pressed, this, &AMyPlayerController::SwitchPlayer);
 }

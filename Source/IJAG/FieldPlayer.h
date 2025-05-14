@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Components/DecalComponent.h" // Moved before .generated.h
+#include "Camera/CameraComponent.h" 
+#include "Components/DecalComponent.h"
 #include "FieldPlayerAnim.h"
 #include "FieldPlayer.generated.h"
 
@@ -24,12 +25,10 @@ public:
     UFUNCTION(BlueprintCallable)
     void SetHasBall(bool bNewState) { bHasBall = bNewState; }
 
-    
-
-
 
 protected:
     virtual void BeginPlay() override;
+
     virtual void Tick(float DeltaTime) override;
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -39,6 +38,7 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
     UFieldPlayerAnim* AnimInstance;
+
 
 
 private:

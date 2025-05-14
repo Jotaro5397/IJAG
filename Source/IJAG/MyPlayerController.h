@@ -14,16 +14,23 @@ class IJAG_API AMyPlayerController : public APlayerController
     GENERATED_BODY()
 
 public:
+    AMyPlayerController();
     virtual void BeginPlay() override;
-    void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime);
+    void SetBroadCameraAsViewTarget();
     virtual void SetupInputComponent() override;
+    
 
     UFUNCTION(BlueprintCallable)
     void SwitchPlayer();
+
+    virtual void OnPossess(APawn* InPawn) override;
+
 
 private:
     TArray<AActor*> AllPlayers;
     int32 CurrentPlayerIndex = 0;
 
     void CacheAllPlayers();
+    
+    void PossessPlayerAndSetView();
 };

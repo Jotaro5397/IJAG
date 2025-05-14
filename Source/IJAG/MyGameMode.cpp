@@ -6,6 +6,7 @@
 #include "BroadCamera.h"
 #include "Ball.h"
 #include "Kismet/GameplayStatics.h"
+#include "FieldPlayer.h"
 
 AMyGameMode::AMyGameMode()
 {
@@ -17,6 +18,15 @@ AMyGameMode::AMyGameMode()
 void AMyGameMode::BeginPlay()
 {
     Super::BeginPlay();
+
+    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    ABall* BallActor = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
+
+    if (CameraActor && BallActor)
+    {
+        CameraActor->SetTargetBall(BallActor);
+    }
+
     InitializeCameraAndBall();
 }
 
@@ -30,24 +40,4 @@ void AMyGameMode::InitializeCameraAndBall()
         BallActor = GetWorld()->SpawnActor<ABall>(BallClass, FVector::ZeroVector, FRotator::ZeroRotator, BallSpawnParams);
     }
 
-    // Spawn or find the camera
-    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-    if (!CameraActor && BroadcastCameraClass)
-    {
-        FActorSpawnParameters CameraSpawnParams;
-        CameraActor = GetWorld()->SpawnActor<ABroadCamera>(BroadcastCameraClass, FVector::ZeroVector, FRotator::ZeroRotator, CameraSpawnParams);
-    }
-
-    // Link camera to ball
-    if (CameraActor && BallActor)
-    {
-        CameraActor->SetTargetBall(BallActor);
-
-        // Force camera view
-        AMyPlayerController* PC = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-        if (PC)
-        {
-            PC->SetViewTargetWithBlend(CameraActor, 0.0f);
-        }
-    }
 }
