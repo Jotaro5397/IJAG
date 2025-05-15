@@ -30,12 +30,11 @@ void ABroadCamera::BeginPlay()
 
     // Access the player character (replace AFieldPlayer with your actual character class)
     AFieldPlayer* PlayerCharacter = Cast<AFieldPlayer>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-
-    // If there is a valid PlayerCharacter, initialize the camera's position based on the character's location plus the offset
     if (PlayerCharacter)
     {
         FVector InitialCameraLocation = PlayerCharacter->GetActorLocation() + CameraOffset;
-        CameraComponent->SetWorldLocation(InitialCameraLocation);
+        // CameraComponent->SetWorldLocation(InitialCameraLocation); // This line is problematic
+        SetActorLocation(InitialCameraLocation); // You should move the Actor (which is the SpringArm's root)
     }
 }
 
@@ -47,20 +46,10 @@ void ABroadCamera::Tick(float DeltaTime)
     if (TargetBall)
     {
         FVector BallLocation = TargetBall->GetActorLocation();
-        UE_LOG(LogTemp, Warning, TEXT("Ball Location: %s"), *BallLocation.ToString());
-
-        // Use CameraOffset directly, which now includes the Z (height) component
-        FVector NewCameraLocation = BallLocation + CameraOffset;
-
-        UE_LOG(LogTemp, Warning, TEXT("New Camera Location Before Interpolation: %s"), *NewCameraLocation.ToString());
-
-        // Interpolate the movement for smoother following
+        FVector NewCameraLocation = BallLocation + CameraOffset; // This is the target for the ACTOR
         FVector CurrentLocation = GetActorLocation();
         FVector InterpolatedLocation = FMath::VInterpTo(CurrentLocation, NewCameraLocation, DeltaTime, InterpSpeed);
-
-        SetActorLocation(InterpolatedLocation);
-
-        UE_LOG(LogTemp, Warning, TEXT("Interpolated Camera Location: %s"), *InterpolatedLocation.ToString());
+        SetActorLocation(InterpolatedLocation); // This moves the SpringArm (RootComponent)
     }
 }
 

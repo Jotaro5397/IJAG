@@ -20,20 +20,18 @@ void AMyPlayerController::BeginPlay() {
 
     // Get a reference to the existing character in the scene
     AFieldPlayer* PlayerCharacter = Cast<AFieldPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), AFieldPlayer::StaticClass()));
-
-    if (PlayerCharacter)
+    if (PlayerCharacter) 
     {
-        // Possess the character
         Possess(PlayerCharacter);
     }
 
-    // Link ball to camera (optional, if needed)
-    ABall* Ball = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
-    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-    if (Ball && CameraActor) {
-        CameraActor->SetTargetBall(Ball);
+    ABroadCamera* BroadCamera = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    if (BroadCamera)
+    {
+        SetViewTarget(BroadCamera);
     }
 
+    
     ABroadCamera* LevelCamera = Cast<ABroadCamera>(
         UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass())
     );
@@ -107,23 +105,17 @@ void AMyPlayerController::CacheAllPlayers()
 }
 
 
-
 void AMyPlayerController::PossessPlayerAndSetView() {
     if (AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(AllPlayers[CurrentPlayerIndex])) {
         Possess(NewPlayer);
         NewPlayer->EnableInput(this);
-        // Ensure the pawn's camera is used
-        SetViewTarget(NewPlayer);
-        UE_LOG(LogTemp, Log, TEXT("Possessed and viewing: %s"), *NewPlayer->GetName());
+        
     }
 }
 
-void AMyPlayerController::OnPossess(APawn* InPawn) 
-{
+void AMyPlayerController::OnPossess(APawn* InPawn) {
     Super::OnPossess(InPawn);
-    if (InPawn) {
-        SetViewTarget(InPawn, FViewTargetTransitionParams()); // Force camera switch
-    }
+   
 }
 
 void AMyPlayerController::SetupInputComponent()

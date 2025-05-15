@@ -30,14 +30,18 @@ void AMyGameMode::BeginPlay()
     InitializeCameraAndBall();
 }
 
-void AMyGameMode::InitializeCameraAndBall()
-{
-    // Spawn or find the ball (using ABall)
-    ABall* BallActor = Cast<ABall>(UGameplayStatics::GetActorOfClass(GetWorld(), ABall::StaticClass()));
-    if (!BallActor && BallClass)
-    {
-        FActorSpawnParameters BallSpawnParams;
-        BallActor = GetWorld()->SpawnActor<ABall>(BallClass, FVector::ZeroVector, FRotator::ZeroRotator, BallSpawnParams);
+// MyGameMode.cpp
+void AMyGameMode::InitializeCameraAndBall() {
+    // Spawn BroadCamera if not placed in the level
+    ABroadCamera* CameraActor = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
+    if (!CameraActor && BroadcastCameraClass) {
+        CameraActor = GetWorld()->SpawnActor<ABroadCamera>(BroadcastCameraClass);
     }
 
+   
+    // Set the camera as the view target
+    APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (PC && CameraActor) {
+        PC->SetViewTarget(CameraActor);
+    }
 }
