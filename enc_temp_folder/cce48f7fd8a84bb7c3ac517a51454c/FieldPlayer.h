@@ -26,14 +26,12 @@ public:
     void SetHasBall(bool bNewState) { bHasBall = bNewState; }
 
 
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
 protected:
     virtual void BeginPlay() override;
 
     virtual void Tick(float DeltaTime) override;
 
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UFUNCTION(BlueprintCallable)
     void TriggerPassAnimation();

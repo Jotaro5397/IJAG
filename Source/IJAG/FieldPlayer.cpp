@@ -59,31 +59,33 @@ void AFieldPlayer::UpdateDecalVisibility(bool bIsPossessed)
     }
 }
 
-void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
+void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    // Pawn-specific inputs (WASD, Sprint)
     PlayerInputComponent->BindAxis("MoveForward", this, &AFieldPlayer::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AFieldPlayer::MoveRight);
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AFieldPlayer::Sprint);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFieldPlayer::StopSprinting);
 }
 
-void AFieldPlayer::MoveForward(float AxisValue)
-{
+void AFieldPlayer::MoveForward(float AxisValue) {
+    if (!Controller) return;
+
+    // Direction is based on the controller's rotation, not the pawn's
     const FRotator Rotation = Controller->GetControlRotation();
     const FRotator YawRotation(0, Rotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
     AddMovementInput(Direction, AxisValue);
 }
 
-void AFieldPlayer::MoveRight(float AxisValue)
-{
-    // Use controller rotation for proper camera-relative movement
+void AFieldPlayer::MoveRight(float AxisValue) {
+    if (!Controller) return;
+
+    // Direction is based on the controller's rotation, not the pawn's
     const FRotator Rotation = Controller->GetControlRotation();
     const FRotator YawRotation(0, Rotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
     AddMovementInput(Direction, AxisValue);
 }
 

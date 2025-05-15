@@ -71,7 +71,7 @@ void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AFieldPlayer::MoveForward(float AxisValue)
 {
-a    const FRotator Rotation = Controller->GetControlRotation();
+    const FRotator Rotation = Controller->GetControlRotation();
     const FRotator YawRotation(0, Rotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
     AddMovementInput(Direction, AxisValue);
