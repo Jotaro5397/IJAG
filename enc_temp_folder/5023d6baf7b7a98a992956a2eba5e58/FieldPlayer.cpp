@@ -11,6 +11,8 @@ AFieldPlayer::AFieldPlayer()
     PrimaryActorTick.bCanEverTick = false;
     bUseControllerRotationYaw = false;
 
+    LastKnownRotation = FRotator::ZeroRotator;
+
     // Enable orientation towards movement
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // Rotation speed
@@ -47,6 +49,8 @@ void AFieldPlayer::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    if (!IsPlayerControlled()) return;
+
 }
 
 // CORRECTED FUNCTION NAME
@@ -69,25 +73,28 @@ void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AFieldPlayer::StopSprinting);
 }
 
-void AFieldPlayer::MoveForward(float AxisValue) {
+void AFieldPlayer::MoveForward(float AxisValue)
+{
     if (!Controller) return;
 
+    // Update LastKnownRotation ONLY when controlled
     LastKnownRotation = Controller->GetControlRotation();
-    // Direction is based on the controller's rotation, not the pawn's
-    const FRotator Rotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+    // Movement direction based on LastKnownRotation
+    const FRotator YawRotation(0, LastKnownRotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
     AddMovementInput(Direction, AxisValue);
 }
 
-void AFieldPlayer::MoveRight(float AxisValue) {
+void AFieldPlayer::MoveRight(float AxisValue)
+{
     if (!Controller) return;
 
-
+    // Update LastKnownRotation ONLY when controlled
     LastKnownRotation = Controller->GetControlRotation();
-    // Direction is based on the controller's rotation, not the pawn's
-    const FRotator Rotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+    // Movement direction based on LastKnownRotation
+    const FRotator YawRotation(0, LastKnownRotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
     AddMovementInput(Direction, AxisValue);
 }

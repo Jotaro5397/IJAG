@@ -34,6 +34,7 @@ void AFieldPlayer::BeginPlay()
 {
     Super::BeginPlay();
 
+    LastKnownRotation = GetActorRotation();
 
     if (PossessedDecalMaterial)
     {
@@ -75,7 +76,7 @@ void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AFieldPlayer::MoveForward(float AxisValue)
 {
-    if (!Controller) return;
+    if (!IsPlayerControlled() || !Controller) return;
 
     // Update LastKnownRotation ONLY when controlled
     LastKnownRotation = Controller->GetControlRotation();
@@ -88,7 +89,7 @@ void AFieldPlayer::MoveForward(float AxisValue)
 
 void AFieldPlayer::MoveRight(float AxisValue)
 {
-    if (!Controller) return;
+    if (!IsPlayerControlled() || !Controller) return;
 
     // Update LastKnownRotation ONLY when controlled
     LastKnownRotation = Controller->GetControlRotation();

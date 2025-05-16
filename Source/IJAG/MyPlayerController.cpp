@@ -116,13 +116,14 @@ void AMyPlayerController::PossessPlayerAndSetView()
 
     // Capture outgoing player's rotation
     AFieldPlayer* OutgoingPlayer = Cast<AFieldPlayer>(GetPawn());
-    if (OutgoingPlayer) 
+    if (OutgoingPlayer && OutgoingPlayer->IsPlayerControlled()) // <-- Add IsPlayerControlled check
     {
         OutgoingPlayer->LastKnownRotation = OutgoingPlayer->GetActorRotation();
     }
 
     // Unpossess and disable old pawn
-    if (APawn* CurrentPawn = GetPawn()) {
+    if (APawn* CurrentPawn = GetPawn())
+    {
         CurrentPawn->DisableInput(this);
         UnPossess();
     }
