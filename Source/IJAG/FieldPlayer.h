@@ -28,6 +28,7 @@ public:
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    FRotator LastKnownRotation;
 
 protected:
     virtual void BeginPlay() override;

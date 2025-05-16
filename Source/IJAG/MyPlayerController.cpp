@@ -16,8 +16,6 @@ AMyPlayerController::AMyPlayerController()
 void AMyPlayerController::BeginPlay() {
     Super::BeginPlay();
 
-    SetBroadCameraAsViewTarget();
-
     // Get a reference to the existing character in the scene
     AFieldPlayer* PlayerCharacter = Cast<AFieldPlayer>(UGameplayStatics::GetActorOfClass(GetWorld(), AFieldPlayer::StaticClass()));
     if (PlayerCharacter) 
@@ -31,29 +29,25 @@ void AMyPlayerController::BeginPlay() {
         SetViewTarget(BroadCamera);
     }
 
-    
-    ABroadCamera* LevelCamera = Cast<ABroadCamera>(
-        UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass())
-    );
+   
+    // Set BroadCamera as the initial view target
+    SetBroadCameraAsViewTarget();
 
-    // Set it as the active view target
-    if (LevelCamera) {
-        SetViewTarget(LevelCamera);
-    }
-
-    // Auto-possess the first player
+    // Auto-possess the first valid player (centralized logic)
     CacheAllPlayers();
     if (AllPlayers.Num() > 0) {
         PossessPlayerAndSetView();
     }
 }
 
-void AMyPlayerController::SetBroadCameraAsViewTarget()
-{
-    ABroadCamera* BroadCamera = Cast<ABroadCamera>(UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass()));
-    if (BroadCamera)
-    {
-        SetViewTarget(BroadCamera); // Switch immediately without blending
+void AMyPlayerController::SetBroadCameraAsViewTarget() {
+    ABroadCamera* BroadCamera = Cast<ABroadCamera>(
+        UGameplayStatics::GetActorOfClass(GetWorld(), ABroadCamera::StaticClass())
+    );
+    if (BroadCamera) {
+        SetViewTarget(BroadCamera);
+        // Sync controller rotation with the camera's orientation
+        SetControlRotation(BroadCamera->GetActorRotation());
     }
 }
 
@@ -98,68 +92,66 @@ void AMyPlayerController::CacheAllPlayers() {
 }
 
 
-void AMyPlayerController::PossessPlayerAndSetView() 
+void AMyPlayerController::PossessPlayerAndSetView()
 {
+    // Validate the player index first
     if (!AllPlayers.IsValidIndex(CurrentPlayerIndex)) {
         UE_LOG(LogTemp, Error, TEXT("Invalid player index!"));
         return;
     }
 
+    // Retrieve the target player actor
     AActor* PlayerActor = AllPlayers[CurrentPlayerIndex];
     if (!IsValid(PlayerActor)) {
         UE_LOG(LogTemp, Error, TEXT("Player actor is invalid!"));
         return;
     }
 
+    // Cast to AFieldPlayer (THIS DECLARES NewPlayer)
     AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(PlayerActor);
     if (!IsValid(NewPlayer)) {
         UE_LOG(LogTemp, Error, TEXT("Failed to cast to AFieldPlayer!"));
         return;
     }
 
+    // Capture outgoing player's rotation
+    AFieldPlayer* OutgoingPlayer = Cast<AFieldPlayer>(GetPawn());
+    if (OutgoingPlayer) 
+    {
+        OutgoingPlayer->LastKnownRotation = OutgoingPlayer->GetActorRotation();
+    }
+
     // Unpossess and disable old pawn
     if (APawn* CurrentPawn = GetPawn()) {
-        CurrentPawn->DisableInput(this); // Disable input first
+        CurrentPawn->DisableInput(this);
         UnPossess();
     }
 
-    if (InputComponent) {
-        // Remove pawn-specific action bindings by name
-        TArray<FName> ActionsToRemove = { "MoveForward", "MoveRight", "Sprint" };
-        TArray<int32> IndicesToRemove;
-
-        // Find indices of actions to remove
-        for (int32 i = 0; i < InputComponent->GetNumActionBindings(); i++) {
-            FInputActionBinding& Binding = InputComponent->GetActionBinding(i);
-            if (ActionsToRemove.Contains(Binding.GetActionName())) {
-                IndicesToRemove.Add(i);
-            }
-        }
-
-        // Remove actions in reverse order to preserve indices
-        for (int32 i = IndicesToRemove.Num() - 1; i >= 0; i--) {
-            InputComponent->RemoveActionBinding(IndicesToRemove[i]);
-        }
-
-        // Clear axis bindings (optional)
-        InputComponent->AxisBindings.Empty();
-    }
-
+    // Possess the new pawn
     Possess(NewPlayer);
     NewPlayer->EnableInput(this);
 
-    // Sync the controller's rotation with the pawn's current rotation
-    SetControlRotation(NewPlayer->GetActorRotation()); // <-- Add this line
+    // SYNC CONTROLLER TO LAST KNOWN ROTATION (NOT ACTOR ROTATION)
+    SetControlRotation(NewPlayer->LastKnownRotation); // <-- Critical change
 
-    // Force controller assignment (critical for input)
     NewPlayer->PossessedBy(this);
 
+    // Debug log
+    UE_LOG(LogTemp, Warning, TEXT("Possessed: %s"), *NewPlayer->GetName());
 
+    // Debug log
+    UE_LOG(LogTemp, Warning, TEXT("Possessed: %s"), *NewPlayer->GetName());
+}
 
-    // Debug logs
-    UE_LOG(LogTemp, Warning, TEXT("Possessed: %s (Controller: %s)"),
-        *NewPlayer->GetName(),
-        *GetNameSafe(NewPlayer->GetController()));
+void AMyPlayerController::OnPossess(APawn* InPawn)
+{
+    Super::OnPossess(InPawn); // Call parent class logic
+
+    // Optional: Add custom logic when possessing a pawn
+    if (InPawn)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Possessed pawn: %s"), *InPawn->GetName());
+    }
 }
 
 void AMyPlayerController::SetupInputComponent() {
