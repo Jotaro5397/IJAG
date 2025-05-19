@@ -107,40 +107,37 @@ void AMyPlayerController::PossessPlayerAndSetView()
         return;
     }
 
-    // Cast to AFieldPlayer (THIS DECLARES NewPlayer)
+    // Cast to AFieldPlayer (NewPlayer)
     AFieldPlayer* NewPlayer = Cast<AFieldPlayer>(PlayerActor);
     if (!IsValid(NewPlayer)) {
         UE_LOG(LogTemp, Error, TEXT("Failed to cast to AFieldPlayer!"));
         return;
     }
 
-    // Capture outgoing player's rotation
+    // Capture outgoing player BEFORE unpossessing
     AFieldPlayer* OutgoingPlayer = Cast<AFieldPlayer>(GetPawn());
-    if (OutgoingPlayer && OutgoingPlayer->IsPlayerControlled()) // <-- Add IsPlayerControlled check
-    {
+
+    // Disable visibility for outgoing player
+    if (OutgoingPlayer && OutgoingPlayer->IsPlayerControlled()) {
+        OutgoingPlayer->UpdateDecalVisibility(false); // Hide indicator
         OutgoingPlayer->LastKnownRotation = OutgoingPlayer->GetActorRotation();
     }
 
     // Unpossess and disable old pawn
-    if (APawn* CurrentPawn = GetPawn())
-    {
+    if (APawn* CurrentPawn = GetPawn()) {
         CurrentPawn->DisableInput(this);
         UnPossess();
     }
 
-    // Possess the new pawn
+    // Enable visibility for new player
+    NewPlayer->UpdateDecalVisibility(true); // Show indicator
+
+    // Possess the new pawn and sync rotation
     Possess(NewPlayer);
     NewPlayer->EnableInput(this);
-
-    // SYNC CONTROLLER TO LAST KNOWN ROTATION (NOT ACTOR ROTATION)
-    SetControlRotation(NewPlayer->LastKnownRotation); // <-- Critical change
-
+    SetControlRotation(NewPlayer->LastKnownRotation);
     NewPlayer->PossessedBy(this);
 
-    // Debug log
-    UE_LOG(LogTemp, Warning, TEXT("Possessed: %s"), *NewPlayer->GetName());
-
-    // Debug log
     UE_LOG(LogTemp, Warning, TEXT("Possessed: %s"), *NewPlayer->GetName());
 }
 

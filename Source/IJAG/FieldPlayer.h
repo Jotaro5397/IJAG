@@ -26,6 +26,8 @@ public:
     void SetHasBall(bool bNewState) { bHasBall = bNewState; }
 
 
+    void UpdateDecalVisibility(bool bIsPossessed);
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     FRotator LastKnownRotation;
@@ -58,19 +60,13 @@ private:
     void StopSprinting();
 
 private:
-    // Decal Component
+  
     UPROPERTY(VisibleAnywhere, Category = "Possession")
-    UDecalComponent* SelectionDecal;
-
-    // Material Reference
-    UPROPERTY(EditDefaultsOnly, Category = "Possession")
-    UMaterialInterface* PossessedDecalMaterial;
+    UStaticMeshComponent* SelectionIndicator;
 
     // Ball State
     UPROPERTY(VisibleAnywhere, Category = "Ball")
     bool bHasBall = false; // Declare ONCE
-
-    void UpdateDecalVisibility(bool bIsPossessed);
 
     // Movement Properties
     UPROPERTY(EditAnywhere, Category = "Movement")

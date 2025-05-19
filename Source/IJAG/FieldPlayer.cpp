@@ -18,16 +18,27 @@ AFieldPlayer::AFieldPlayer()
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // Rotation speed
     GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
-    SelectionDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionDecal"));
-    SelectionDecal->SetupAttachment(RootComponent);
-    SelectionDecal->SetRelativeRotation(FRotator(90.f, 0.f, 0.f)); // Face upwards
-    SelectionDecal->DecalSize = FVector(100.f, 200.f, 200.f);
-    SelectionDecal->SetVisibility(false);
+    SelectionIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SelectionIndicator"));
+    SelectionIndicator->SetupAttachment(RootComponent);
 
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultMaterial(TEXT("/Game/Path/To/DefaultDecalMaterial"));
-    if (DefaultMaterial.Succeeded())
+    // Adjust position, rotation, and scale
+    SelectionIndicator->SetRelativeLocation(FVector(0.f, 0.f, 30.f)); // Raise above ground
+    SelectionIndicator->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f)); // Rotate to face upward
+    SelectionIndicator->SetRelativeScale3D(FVector(2.f)); // Scale to make visible
+    SelectionIndicator->SetVisibility(false);
+
+    SelectionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision); //Make the material unable to collide
+
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(TEXT("/Engine/BasicShapes/Plane"));
+    if (PlaneMesh.Succeeded())
     {
-        SelectionDecal->SetDecalMaterial(DefaultMaterial.Object);
+        SelectionIndicator->SetStaticMesh(PlaneMesh.Object);
+    }
+
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> IndicatorMaterial(TEXT("/Game/Path/To/M_Circle"));
+    if (IndicatorMaterial.Succeeded())
+    {
+        SelectionIndicator->SetMaterial(0, IndicatorMaterial.Object);
     }
 }
 void AFieldPlayer::BeginPlay()
@@ -36,11 +47,7 @@ void AFieldPlayer::BeginPlay()
 
     LastKnownRotation = GetActorRotation();
 
-    if (PossessedDecalMaterial)
-    {
-        UMaterialInstanceDynamic* DynMaterial = UMaterialInstanceDynamic::Create(PossessedDecalMaterial, this);
-        SelectionDecal->SetDecalMaterial(DynMaterial);
-    }
+    
 
     // Initialize animation instance
     AnimInstance = Cast<UFieldPlayerAnim>(GetMesh()->GetAnimInstance());
@@ -57,10 +64,9 @@ void AFieldPlayer::Tick(float DeltaTime)
 // CORRECTED FUNCTION NAME
 void AFieldPlayer::UpdateDecalVisibility(bool bIsPossessed)
 {
-    if (SelectionDecal)
+    if (SelectionIndicator) // Changed from SelectionDecal
     {
-        SelectionDecal->SetVisibility(bIsPossessed);
-        // ... (material logic)
+        SelectionIndicator->SetVisibility(bIsPossessed);
     }
 }
 
