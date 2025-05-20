@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h" 
-#include "Components/DecalComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "FieldPlayerAnim.h"
 #include "FieldPlayer.generated.h"
 

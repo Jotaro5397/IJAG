@@ -20,10 +20,14 @@ AFieldPlayer::AFieldPlayer()
 
     SelectionIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SelectionIndicator"));
     SelectionIndicator->SetupAttachment(RootComponent);
-    SelectionIndicator->SetRelativeLocation(FVector(0.f, 0.f, 30.f));
-    SelectionIndicator->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
-    SelectionIndicator->SetVisibility(false); // Start hidden
-    SelectionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    // Adjust position, rotation, and scale
+    SelectionIndicator->SetRelativeLocation(FVector(0.f, 0.f, 30.f)); // Raise above ground
+    SelectionIndicator->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f)); // Rotate to face upward
+    SelectionIndicator->SetRelativeScale3D(FVector(2.f)); // Scale to make visible
+    SelectionIndicator->SetVisibility(false);
+
+    SelectionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision); //Make the material unable to collide
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(TEXT("/Engine/BasicShapes/Plane"));
     if (PlaneMesh.Succeeded())

@@ -135,7 +135,6 @@ void AMyPlayerController::PossessPlayerAndSetView()
     Possess(NewPlayer);
     NewPlayer->EnableInput(this);
     SetControlRotation(NewPlayer->LastKnownRotation);
-    NewPlayer->UpdateDecalVisibility(true);
     NewPlayer->PossessedBy(this);
 
     UE_LOG(LogTemp, Warning, TEXT("Possessed: %s"), *NewPlayer->GetName());
@@ -143,21 +142,12 @@ void AMyPlayerController::PossessPlayerAndSetView()
 
 void AMyPlayerController::OnPossess(APawn* InPawn)
 {
-    Super::OnPossess(InPawn);
+    Super::OnPossess(InPawn); // Call parent class logic
 
-    // Hide all indicators first (prevent multiple showing)
-    for (AActor* Actor : AllPlayers)
+    // Optional: Add custom logic when possessing a pawn
+    if (InPawn)
     {
-        if (AFieldPlayer* FieldPlayer = Cast<AFieldPlayer>(Actor)) 
-        {
-            FieldPlayer->UpdateDecalVisibility(false);
-        }
-    }
-
-    // Show indicator on the possessed player
-    if (AFieldPlayer* PossessedPlayer = Cast<AFieldPlayer>(InPawn)) 
-    {
-        PossessedPlayer->UpdateDecalVisibility(true);
+        UE_LOG(LogTemp, Warning, TEXT("Possessed pawn: %s"), *InPawn->GetName());
     }
 }
 
