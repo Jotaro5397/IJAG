@@ -22,6 +22,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Ball Properties")
 	float MoveSpeed = 1000.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ball")
+	UStaticMeshComponent* BallMesh;
+
+	// Add this function
+	UStaticMeshComponent* GetBallMesh() const { return BallMesh; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

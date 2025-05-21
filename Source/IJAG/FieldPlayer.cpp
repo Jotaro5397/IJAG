@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Ball.h" 
+#include "Components/CapsuleComponent.h"
 
 AFieldPlayer::AFieldPlayer()
 {
@@ -13,6 +15,8 @@ AFieldPlayer::AFieldPlayer()
 
     LastKnownRotation = FRotator::ZeroRotator;
 
+    GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFieldPlayer::OnBallHit);
+
     // Enable orientation towards movement
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // Rotation speed
@@ -20,9 +24,10 @@ AFieldPlayer::AFieldPlayer()
 
     SelectionIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SelectionIndicator"));
     SelectionIndicator->SetupAttachment(RootComponent);
-    SelectionIndicator->SetRelativeLocation(FVector(0.f, 0.f, 30.f));
+    SelectionIndicator->SetRelativeLocation(IndicatorOffset); 
     SelectionIndicator->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
-    SelectionIndicator->SetVisibility(false); // Start hidden
+    SelectionIndicator->SetRelativeScale3D(IndicatorScale); 
+    SelectionIndicator->SetVisibility(false);
     SelectionIndicator->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(TEXT("/Engine/BasicShapes/Plane"));
@@ -55,6 +60,29 @@ void AFieldPlayer::Tick(float DeltaTime)
 
     if (!IsPlayerControlled()) return;
 
+    if (AttachedBall && IsPlayerControlled())
+    {
+        const FVector TargetLocation = GetActorLocation() +
+            GetActorForwardVector() * BallDistance;
+
+        // Calculate distance to target
+        const float CurrentDistance = FVector::Distance(
+            TargetLocation,
+            AttachedBall->GetActorLocation()
+        );
+
+        // Only apply force if beyond tolerance
+        if (CurrentDistance > PositionTolerance)
+        {
+            FVector ForceDirection = (TargetLocation - AttachedBall->GetActorLocation());
+            ForceDirection.Normalize();
+
+            AttachedBall->GetBallMesh()->AddForce(
+                ForceDirection * BallFollowForce * CurrentDistance // Scale force by distance
+            );
+        }
+    }
+
 }
 
 // CORRECTED FUNCTION NAME
@@ -65,6 +93,8 @@ void AFieldPlayer::UpdateDecalVisibility(bool bIsPossessed)
         SelectionIndicator->SetVisibility(bIsPossessed);
     }
 }
+
+
 
 void AFieldPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -87,6 +117,12 @@ void AFieldPlayer::MoveForward(float AxisValue)
     const FRotator YawRotation(0, LastKnownRotation.Yaw, 0);
     const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
     AddMovementInput(Direction, AxisValue);
+
+    if (AttachedBall)
+    {
+        const FVector KickDirection = GetActorForwardVector();
+        AttachedBall->GetBallMesh()->AddForce(KickDirection * 50000 * AxisValue);
+    }
 }
 
 void AFieldPlayer::MoveRight(float AxisValue)
@@ -132,5 +168,35 @@ void AFieldPlayer::OnPassAnimationCompleted()
     if (AnimInstance)
     {
         AnimInstance->StopPassAnimation();
+    }
+}
+
+
+// Remove duplicate OnBallHit implementation (keep only one)
+void AFieldPlayer::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+    const FHitResult& Hit)
+{
+    if (ABall* Ball = Cast<ABall>(OtherActor))
+    {
+        if (!AttachedBall)
+        {
+            // Reset velocities first
+            Ball->GetBallMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
+            Ball->GetBallMesh()->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+            AttachedBall = Ball;
+
+            // Configure physics
+            Ball->GetBallMesh()->SetLinearDamping(2.0f);  // Increased from 0.5
+            Ball->GetBallMesh()->SetAngularDamping(2.0f); // Increased from 0.5
+            Ball->GetBallMesh()->SetEnableGravity(false);
+
+            // Set collision response
+            Ball->GetBallMesh()->SetCollisionResponseToChannel(
+                ECC_Pawn,
+                ECR_Ignore //  Prevent player collisions
+            );
+        }
     }
 }

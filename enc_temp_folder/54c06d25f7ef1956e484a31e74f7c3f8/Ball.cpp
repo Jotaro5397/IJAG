@@ -13,12 +13,15 @@ ABall::ABall()
     BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
     RootComponent = BallMesh;
 
+    // Set up physics
     BallMesh->SetSimulatePhysics(true);
     BallMesh->SetLinearDamping(0.1f);
     BallMesh->SetAngularDamping(0.1f);
     BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 
-
+    Ball->GetBallMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
+    Ball->GetBallMesh()->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+    Ball->GetBallMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned

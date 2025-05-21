@@ -4,12 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Camera/CameraComponent.h"
+#include "Camera/CameraComponent.h" 
 #include "Components/StaticMeshComponent.h"
 #include "FieldPlayerAnim.h"
-#include "Ball.h"
-#include "Components/CapsuleComponent.h"
-#include "FieldPlayer.generated.h" //
+#include "FieldPlayer.generated.h"
 
 class ABall; 
 
