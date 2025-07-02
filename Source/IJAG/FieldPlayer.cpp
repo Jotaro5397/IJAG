@@ -171,6 +171,15 @@ void AFieldPlayer::OnPassAnimationCompleted()
     }
 }
 
+FVector AFieldPlayer::GetBallLocation() const
+{
+    if (AttachedBall)
+    {
+        return AttachedBall->GetActorLocation();
+    }
+    return GetActorLocation();
+}
+
 
 // Remove duplicate OnBallHit implementation (keep only one)
 void AFieldPlayer::OnBallHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
