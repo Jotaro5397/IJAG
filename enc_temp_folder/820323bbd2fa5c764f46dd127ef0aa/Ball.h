@@ -2,21 +2,20 @@
 
 #pragma once
 
-#pragma once
-
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h"
+#include "GameFramework/Character.h"
 #include "Ball.generated.h"
 
 UCLASS()
-class IJAG_API ABall : public AActor
+class IJAG_API ABall : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
+	// Sets default values for this character's properties
 	ABall();
 
+public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetBallLocation() const { return GetActorLocation(); }
 
@@ -26,14 +25,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ball")
 	UStaticMeshComponent* BallMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ball")
-	USphereComponent* BallCollision;  // <<== THIS IS THE BIT YOU NEED
-
+	// Add this function
 	UStaticMeshComponent* GetBallMesh() const { return BallMesh; }
 
 protected:
+	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
+public:	
+	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 };

@@ -6,19 +6,18 @@
 // Sets default values
 ABall::ABall()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 
-    // Replace existing root component
+    BallCollision = CreateDefaultSubobject<USphereComponent>(TEXT("BallCollision"));
+    RootComponent = BallCollision;
+    BallCollision->InitSphereRadius(24.0f);
+    BallCollision->SetSimulatePhysics(true);
+    BallCollision->SetCollisionProfileName(TEXT("PhysicsActor"));
+
     BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
-    RootComponent = BallMesh;
-
-    BallMesh->SetSimulatePhysics(true);
-    BallMesh->SetLinearDamping(0.1f);
-    BallMesh->SetAngularDamping(0.1f);
-    BallMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
-
-
+    BallMesh->SetupAttachment(BallCollision);
+    BallMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    BallMesh->SetSimulatePhysics(false); // Only BallCollision simulates
 }
 
 // Called when the game starts or when spawned
@@ -34,11 +33,4 @@ void ABall::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
   
-}
-
-// Called to bind functionality to input
-void ABall::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
